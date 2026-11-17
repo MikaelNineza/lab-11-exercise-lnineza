@@ -50,7 +50,18 @@ public:
     };
 
     // TODO
-    void setTexture(SpriteID sprite, TextureID newTexture) {};
+    void setTexture(SpriteID sprite, TextureID newTexture) {
+        assert(sprite < mNumSprites);
+        sf::Vector2u pSize = mAtlas.getSizePixels(newTexture);
+        sf::FloatRect uvBounds = mAtlas.getBoundsUV(newTexture);
+
+        mVertices[sprite * 6] = sf::Vertex{{0.f, 0.f}, sf::Color::Red, uvBounds.position};
+        mVertices[sprite * 6 + 1] = sf::Vertex{{0.f, static_cast<float>(pSize.y)}, sf::Color::Red, uvBounds.position + sf::Vector2f{0.f, uvBounds.size.y}};
+        mVertices[sprite * 6 + 2] = sf::Vertex{{static_cast<float>(pSize.x), 0.f}, sf::Color::Red, uvBounds.position + sf::Vector2f{uvBounds.size.x, 0.f}};
+        mVertices[sprite * 6 + 3] = sf::Vertex{{static_cast<float>(pSize.x), 0.f}, sf::Color::Red, uvBounds.position + sf::Vector2f{uvBounds.size.x, 0.f}};
+        mVertices[sprite * 6 + 4] = sf::Vertex{{0.f, static_cast<float>(pSize.y)}, sf::Color::Red, uvBounds.position + sf::Vector2f{0.f, uvBounds.size.y}};
+        mVertices[sprite * 6 + 5] = sf::Vertex{{static_cast<float>(pSize.x), static_cast<float>(pSize.y)}, sf::Color::Red, uvBounds.position + uvBounds.size};
+    };
 
     // TODO
     void draw(sf::RenderTarget& target, sf::RenderStates states) const {};
