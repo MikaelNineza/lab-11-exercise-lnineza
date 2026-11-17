@@ -25,7 +25,7 @@ public:
         : mVertices(sf::PrimitiveType::Triangles),
           mNumSprites{0},
           mAtlas(atlasSize, padding),
-          mShader(std::filesystem::path{"main.vert"}, std::filesystem::path{"main.frag"}) {
+          mShader(std::filesystem::path{"main_sfml.vert"}, std::filesystem::path{"main.frag"}) {
         // TODO
     }
 
@@ -61,8 +61,22 @@ public:
         mVertices[sprite * 6 + 5] = sf::Vertex{{static_cast<float>(pSize.x), static_cast<float>(pSize.y)}, sf::Color::Red, uvBounds.position + uvBounds.size};
     };
 
-    // TODO
-    void draw(sf::RenderTarget& target, sf::RenderStates states) const {};
+    void draw(sf::RenderTarget& target, sf::RenderStates states) const {
+        sf::VertexArray temp(mVertices);
+        for (int i = 0; i < mNumSprites; ++i) {
+            for (int j = 0; j < 6; ++j) {
+                temp[i * 6 + j].position = mTransforms[i].applyPoint(temp[i * 6 + j].position);
+            }
+        }
+
+        states.texture = &mAtlas.getTexture();
+        //https://www.sfml-dev.org/tutorials/3.0/graphics/shader/#fragment-shader
+        mShader.setUniform("texture", sf::Shader::CurrentTexture);
+
+
+        states.shader = &mShader;
+        target.draw(temp, states);
+    };
 
     // TODO
     void drawGL() {};
