@@ -33,7 +33,6 @@ public:
         return mAtlas.registerTexture(filepath);
     };
 
-    // TODO
     SpriteID createSprite(TextureID textureID) {
         sf::Vector2u pSize = mAtlas.getSizePixels(textureID);
         sf::FloatRect uvBounds = mAtlas.getBoundsUV(textureID);
@@ -49,7 +48,6 @@ public:
         return mNumSprites - 1;
     };
 
-    // TODO
     void setTexture(SpriteID sprite, TextureID newTexture) {
         assert(sprite < mNumSprites);
         sf::Vector2u pSize = mAtlas.getSizePixels(newTexture);
@@ -69,11 +67,13 @@ public:
     // TODO
     void drawGL() {};
 
-    // TODO
-    BasicTransform& getTransform(SpriteID id) {}
+    BasicTransform& getTransform(SpriteID id) {
+        return mTransforms.at(id);
+    }
 
-    // TODO
-    const TextureAtlas& getAtlas() const {};
+    const TextureAtlas& getAtlas() const {
+        return mAtlas;
+    };
 
 private:
     sf::VertexArray mVertices;
