@@ -29,11 +29,25 @@ public:
         // TODO
     }
 
-    // TODO
-    TextureID registerTexture(const std::string& filepath) { return {}; };
+    TextureID registerTexture(const std::string& filepath) {
+        return mAtlas.registerTexture(filepath);
+    };
 
     // TODO
-    SpriteID createSprite(TextureID textureID) { return {}; };
+    SpriteID createSprite(TextureID textureID) {
+        sf::Vector2u pSize = mAtlas.getSizePixels(textureID);
+        sf::FloatRect uvBounds = mAtlas.getBoundsUV(textureID);
+        mVertices.append(sf::Vertex{{0.f, 0.f}, sf::Color::Red, uvBounds.position});
+        mVertices.append(sf::Vertex{{0.f, static_cast<float>(pSize.y)}, sf::Color::Red, uvBounds.position + sf::Vector2f{0.f, uvBounds.size.y}});
+        mVertices.append(sf::Vertex{{static_cast<float>(pSize.x), 0.f}, sf::Color::Red, uvBounds.position + sf::Vector2f{uvBounds.size.x, 0.f}});
+        mVertices.append(sf::Vertex{{static_cast<float>(pSize.x), 0.f}, sf::Color::Red, uvBounds.position + sf::Vector2f{uvBounds.size.x, 0.f}});
+        mVertices.append(sf::Vertex{{0.f, static_cast<float>(pSize.y)}, sf::Color::Red, uvBounds.position + sf::Vector2f{0.f, uvBounds.size.y}});
+        mVertices.append(sf::Vertex{{static_cast<float>(pSize.x), static_cast<float>(pSize.y)}, sf::Color::Red, uvBounds.position + uvBounds.size});
+
+        mTransforms.emplace_back(BasicTransform{});
+        mNumSprites += 1;
+        return mNumSprites - 1;
+    };
 
     // TODO
     void setTexture(SpriteID sprite, TextureID newTexture) {};
