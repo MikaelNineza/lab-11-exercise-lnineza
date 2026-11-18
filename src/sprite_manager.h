@@ -25,8 +25,37 @@ public:
         : mVertices(sf::PrimitiveType::Triangles),
           mNumSprites{0},
           mAtlas(atlasSize, padding),
-          mShader(std::filesystem::path{"main_sfml.vert"}, std::filesystem::path{"main.frag"}) {
+          mShader(std::filesystem::path{"main.vert"}, std::filesystem::path{"main.frag"}) {
         // TODO
+        mPositionAttribLocation = glGetAttribLocation(mShader.getNativeHandle(), "position");
+        glCheck();
+        mTexCoordsAttribLocation = glGetAttribLocation(mShader.getNativeHandle(), "texCoords");
+        glCheck();
+        mSpriteNumberAttribLocation = glGetAttribLocation(mShader.getNativeHandle(), "spriteNumber");
+        glCheck();
+        mTextureUniformLocation = glGetUniformLocation(mShader.getNativeHandle(), "texture");
+        glCheck();
+        mTransformsUniformLocation = glGetUniformLocation(mShader.getNativeHandle(), "transforms");
+        glCheck();
+        mNumTransformsUniformLocation = glGetUniformLocation(mShader.getNativeHandle(), "numTransforms");
+        glCheck();
+
+        glCheck(glGenBuffers(1, &mVerticesVBO));
+        glCheck(glGenBuffers(1, &mSpriteNumberVBO));
+        glCheck(glGenTextures(1, &mTransformsTexture));
+        
+        glCheck(glActiveTexture(GL_TEXTURE1));
+        glCheck(glBindTexture(GL_TEXTURE_1D, mTransformsTexture));
+        glCheck(glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
+        glCheck(glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
+        glCheck(glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
+
+    }
+
+    ~SpriteManager() {
+       glDeleteTextures(1, &mVerticesVBO);
+       glDeleteTextures(1, &mSpriteNumberVBO);
+       glDeleteTextures(1, &mTransformsTexture); 
     }
 
     TextureID registerTexture(const std::string& filepath) {
@@ -44,6 +73,12 @@ public:
         mVertices.append(sf::Vertex{{static_cast<float>(pSize.x), static_cast<float>(pSize.y)}, sf::Color::Red, uvBounds.position + uvBounds.size});
 
         mTransforms.emplace_back(BasicTransform{});
+        mSpriteNumbers.push_back(mNumSprites);
+        mSpriteNumbers.push_back(mNumSprites);
+        mSpriteNumbers.push_back(mNumSprites);
+        mSpriteNumbers.push_back(mNumSprites);
+        mSpriteNumbers.push_back(mNumSprites);
+        mSpriteNumbers.push_back(mNumSprites);
         mNumSprites += 1;
         return mNumSprites - 1;
     };
@@ -79,7 +114,48 @@ public:
     };
 
     // TODO
-    void drawGL() {};
+    void drawGL() {
+        // Must specify current program in use
+        glUseProgram(mShader.getNativeHandle());
+
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, mVerticesVBO));
+        glCheck(glBufferData(GL_ARRAY_BUFFER, mVertices.getVertexCount() * sizeof(sf::Vertex), &mVertices[0],
+                                GL_STATIC_DRAW));      
+        // set position attribute layout
+        glCheck(glVertexAttribPointer(mPositionAttribLocation, 2, GL_FLOAT, GL_FALSE,
+                                      sizeof(sf::Vertex), (const void*)0));
+        glEnableVertexAttribArray(mPositionAttribLocation);
+        // set texCoordsIn attribute layout
+        glCheck(glVertexAttribPointer(mTexCoordsAttribLocation, 2, GL_FLOAT, GL_FALSE,
+                                      sizeof(sf::Vertex),
+                                      (const void*)(sizeof(sf::Vector2f) + sizeof(sf::Color))));
+        glEnableVertexAttribArray(mTexCoordsAttribLocation);
+        glCheck();
+
+
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, mSpriteNumberVBO));
+        glCheck(glBufferData(GL_ARRAY_BUFFER, mSpriteNumbers.size() * sizeof(float), mSpriteNumbers.data(),
+                     GL_STATIC_DRAW));
+        glCheck(glVertexAttribPointer(mSpriteNumberAttribLocation, 1, GL_FLOAT, GL_FALSE,
+                                      sizeof(float),
+                                      (const void*)0));
+        glEnableVertexAttribArray(mSpriteNumberAttribLocation);
+
+        glCheck(glActiveTexture(GL_TEXTURE0));
+        // Bind texture to GL_TEXTURE_2D target of texture unit 0
+        glCheck(glBindTexture(GL_TEXTURE_2D, mAtlas.getTexture().getNativeHandle()));
+        glCheck(glUniform1i(mTextureUniformLocation, 0));
+
+        glCheck(glActiveTexture(GL_TEXTURE1));
+        glCheck(glBindTexture(GL_TEXTURE_1D, mTransformsTexture));
+        glCheck(glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA32F_ARB, mNumSprites, 0, GL_RGBA, GL_FLOAT, mTransforms.data()));
+        glCheck(glUniform1i(mTransformsUniformLocation, 1));
+
+        glCheck(glUniform1i(mNumTransformsUniformLocation, mNumSprites));
+        glCheck(glDrawArrays(GL_TRIANGLES, 0, mVertices.getVertexCount()));
+
+
+    };
 
     BasicTransform& getTransform(SpriteID id) {
         return mTransforms.at(id);
