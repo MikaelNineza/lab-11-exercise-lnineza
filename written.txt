@@ -1,2 +1,10 @@
-2a.
-2b.
+2a. Average fps: 20.0765 batch
+    Average fps: 20.5604 nobatch
+
+    The results are basically identical. I would have expected batch to perform better but it does not. 
+    My guess would be that there must be something wrong with my implementation.
+
+2b. To implement depth, we simply need to modify the third component of gl_Position.
+    At this moment we keep main.vert to use gl_Position = vec4(cameraPos(worldPos), 0, 1),
+    so we would add another vertex attribute to represent depth and replace 0 with it.
+
